@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Welcome Shristu 🎀</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh; /* Changed from height: 100vh */
+      background: linear-gradient(135deg, #ffd6e0, #f7c1c9);
+      font-family: 'Poppins', sans-serif;
+      position: relative;
+      overflow-x: hidden; /* Changed from overflow: hidden */
+    }
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .login-box {
+      position: relative;
+      background: #ffffff;
+      padding: 30px; /* Reduced from 40px */
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      text-align: center;
+      z-index: 2;
+      max-width: 320px;
+      width: 90%;
+      animation: fadeIn 2s ease;
+      margin: 20px 0; /* Added margin for better spacing */
+    }
+    .login-box h2 {
+      margin-bottom: 20px;
+      color: #d6336c;
+      font-size: 1.5em; /* Added responsive font size */
+    }
+    .login-box input {
+      width: calc(100% - 24px); /* Adjusted width to account for padding */
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      font-size: 1em;
+    }
+    .login-box button {
+      padding: 12px 25px;
+      background: #d6336c;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1em; /* Reduced from 1.1em */
+      margin-top: 10px;
+      transition: background 0.3s;
+      width: 100%; /* Make button full width */
+    }
+    .login-box button:hover {
+      background: #ff4d6d;
+    }
+    .show-password {
+      font-size: 0.9em;
+      color: #555;
+      margin-top: 10px;
+      text-align: left; /* Align checkbox text to left */
+      padding-left: 5px;
+    }
+    #typingText {
+      margin-bottom: 15px; /* Reduced from 25px */
+      color: #ff4d6d;
+      font-weight: 600;
+      min-height: 50px;
+      font-size: 1em;
+      animation: fadeIn 3s ease;
+      padding: 0 10px; /* Added padding for better text wrapping */
+      text-align: center;
+      width: 90%; /* Limit width for better readability */
+      max-width: 500px; /* Maximum width for larger screens */
+    }
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(-20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .centered-container {
+      position: relative; /* Changed from absolute */
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 20px 0;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform: none; /* Removed translate */
+      left: auto; /* Removed absolute positioning */
+      top: auto;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+      .login-box {
+        padding: 20px;
+      }
+      #typingText {
+        font-size: 0.9em;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+<canvas id="confettiCanvas"></canvas>
+
+<div class="centered-container">
+  <div id="typingText"></div>
+  <div class="login-box">
+    <h2>Welcome 🎉</h2>
+    <input type="text" id="username" placeholder="Enter Username" required><br>
+    <input type="password" id="password" placeholder="Enter Password" required><br>
+    <div class="show-password">
+      <input type="checkbox" onclick="togglePassword()"> Show Password
+    </div>
+    <button onclick="login()">Login</button>
+  </div>
+</div>
+
+<script>
+// Setup canvas
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const confettiCanvas = document.getElementById("confettiCanvas");
+const cctx = confettiCanvas.getContext("2d");
+let width = window.innerWidth;
+let height = window.innerHeight;
+canvas.width = confettiCanvas.width = width;
+canvas.height = confettiCanvas.height = height;
+
+// Petal Image - Added fallback in case image fails to load
+const petalImage = new Image();
+petalImage.src = 'https://i.postimg.cc/L6pWh8T0/petal.png';
+petalImage.onerror = function() {
+  console.log("Petal image failed to load, using colored circles instead");
+  // We'll handle this in the animation loop
+};
+
+// Variables
+const petals = [];
+const balloons = [];
+const fireworks = [];
+const confettiParticles = [];
+const balloonColors = ["#ffb6c1", "#ff69b4", "#ffc0cb", "#ffa07a", "#f08080"];
+
+// Fill petals
+for (let i = 0; i < 80; i++) {
+  petals.push({
+    x: Math.random() * width,
+    y: Math.random() * height,
+    size: Math.random() * 30 + 20,
+    speed: Math.random() * 1 + 0.5,
+    drift: Math.random() * 2 - 1,
+    angle: Math.random() * 360,
+    color: `hsl(${Math.random() * 360}, 70%, 80%)` // Added color for fallback
+  });
+}
+
+// Fill balloons
+for (let i = 0; i < 12; i++) {
+  balloons.push({
+    x: Math.random() * width,
+    y: height + Math.random() * 200,
+    size: Math.random() * 40 + 30,
+    color: balloonColors[Math.floor(Math.random() * balloonColors.length)],
+    speed: Math.random() * 0.7 + 0.5
+  });
+}
+
+// Typing text
+const text = "🌸 Happy Birthday Shristu! May your day sparkle with love and joy! 🎀";
+let index = 0;
+function startTyping() {
+  const typingDiv = document.getElementById("typingText");
+  const speed = 80;
+  function type() {
+    if (index < text.length) {
+      typingDiv.innerHTML += text.charAt(index);
+      index++;
+      setTimeout(type, speed);
+    }
+  }
+  type();
+}
+startTyping();
+
+// Animate
+function animate() {
+  ctx.clearRect(0, 0, width, height);
+  cctx.clearRect(0, 0, width, height);
+
+  // Petals - with fallback if image doesn't load
+  petals.forEach(petal => {
+    ctx.save();
+    ctx.translate(petal.x, petal.y);
+    ctx.rotate(petal.angle * Math.PI / 180);
+    if (petalImage.complete && petalImage.naturalWidth !== 0) {
+      ctx.drawImage(petalImage, -petal.size / 2, -petal.size / 2, petal.size, petal.size);
+    } else {
+      // Fallback: draw colored circles if image fails to load
+      ctx.beginPath();
+      ctx.arc(0, 0, petal.size / 2, 0, Math.PI * 2);
+      ctx.fillStyle = petal.color;
+      ctx.fill();
+    }
+    ctx.restore();
+    petal.y += petal.speed;
+    petal.x += petal.drift;
+    petal.angle += 1;
+    if (petal.y > height) petal.y = -petal.size;
+    if (petal.x > width || petal.x < -petal.size) petal.x = Math.random() * width;
+  });
+
+  // Balloons
+  balloons.forEach(balloon => {
+    ctx.beginPath();
+    ctx.ellipse(balloon.x, balloon.y, balloon.size * 0.6, balloon.size, 0, 0, Math.PI * 2);
+    ctx.fillStyle = balloon.color;
+    ctx.fill();
+    balloon.y -= balloon.speed;
+    if (balloon.y < -balloon.size) {
+      balloon.y = height + Math.random() * 100;
+      balloon.x = Math.random() * width;
+    }
+  });
+
+  // Confetti
+  confettiParticles.forEach((p, index) => {
+    cctx.fillStyle = p.color;
+    cctx.fillRect(p.x, p.y, p.size, p.size);
+    p.x += p.speedX;
+    p.y += p.speedY;
+    if (p.y > height) confettiParticles.splice(index, 1);
+  });
+
+  // Fireworks
+  fireworks.forEach((fw, index) => {
+    ctx.beginPath();
+    ctx.arc(fw.x, fw.y, fw.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${fw.color},${fw.alpha})`;
+    ctx.fill();
+    fw.x += fw.speedX;
+    fw.y += fw.speedY;
+    fw.alpha -= 0.02;
+    if (fw.alpha <= 0) fireworks.splice(index, 1);
+  });
+
+  requestAnimationFrame(animate);
+}
+animate();
+
+// Confetti
+function launchConfetti() {
+  for (let i = 0; i < 15; i++) {
+    confettiParticles.push({
+      x: Math.random() * width,
+      y: 0,
+      speedX: Math.random() * 4 - 2,
+      speedY: Math.random() * 3 + 2,
+      size: Math.random() * 8 + 4,
+      color: `hsl(${Math.random() * 360}, 70%, 60%)`
+    });
+  }
+}
+setInterval(launchConfetti, 1000);
+
+// Fireworks
+function launchFireworks() {
+  const centerX = Math.random() * width;
+  const centerY = Math.random() * height / 2;
+  for (let i = 0; i < 50; i++) {
+    const angle = Math.random() * 2 * Math.PI;
+    const speed = Math.random() * 5 + 2;
+    fireworks.push({
+      x: centerX,
+      y: centerY,
+      size: Math.random() * 3 + 2,
+      speedX: Math.cos(angle) * speed,
+      speedY: Math.sin(angle) * speed,
+      color: `${Math.floor(Math.random()*255)},${Math.floor(Math.random()*255)},${Math.floor(Math.random()*255)}`,
+      alpha: 1
+    });
+  }
+}
+setInterval(launchFireworks, 10000);
+
+// Login system
+function login() {
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+
+  if (username === "shrstu" && password === "2may") {
+    window.location.href = "birthday.html"; 
+  } else {
+    alert("Wrong Username or Password! ❌ Please try again.");
+  }
+}
+
+// Show password
+function togglePassword() {
+  const passField = document.getElementById("password");
+  passField.type = passField.type === "password" ? "text" : "password";
+}
+
+// Handle resize
+window.addEventListener('resize', () => {
+  width = window.innerWidth;
+  height = window.innerHeight;
+  canvas.width = confettiCanvas.width = width;
+  canvas.height = confettiCanvas.height = height;
+});
+</script>
+
+</body>
+</html>
